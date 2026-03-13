@@ -1,0 +1,177 @@
+{% extends 'base_app.html' %}
+{% block title %}{{ team.name }} — ProjectFlow{% endblock %}
+{% block page_title %}{{ team.name }}{% endblock %}
+{% block content %}
+
+{# Header card #}
+<div class="card mb-20" style="background:linear-gradient(135deg,var(--brand-dark),var(--brand));color:white;border:none">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px">
+    <div>
+      <h2 style="font-family:var(--font-display);font-size:26px;font-weight:800;margin-bottom:6px">{{ team.name }}</h2>
+      <p style="opacity:0.85;font-size:15px;margin-bottom:12px">{{ team.project_title }}</p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:13px;opacity:0.8">
+        <span><i class="fa fa-users"></i> {{ team.member_count }} Members</span>
+        <span><i class="fa fa-tasks"></i> {{ team.tasks.count }} Tasks</span>
+        <span><i class="fa fa-folder"></i> {{ team.submissions.count }} Submissions</span>
+        {% if team.github_url %}<span><i class="fa fa-code-branch"></i> <a href="{{ team.github_url }}" target="_blank" style="color:white">GitHub</a></span>{% endif %}
+      </div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-family:var(--font-display);font-size:48px;font-weight:800;line-height:1">{{ team.progress_percent }}%</div>
+      <div style="opacity:0.75;font-size:13px">Overall Progress</div>
+    </div>
+  </div>
+  <div style="margin-top:16px;background:rgba(255,255,255,0.2);border-radius:99px;height:8px;overflow:hidden">
+    <div style="width:{{ team.progress_percent }}%;height:100%;background:white;border-radius:99px"></div>
+  </div>
+</div>
+
+<div class="grid-2">
+
+  {# Members #}
+  <div class="card">
+    <div class="card-title">Team Members</div>
+    <table>
+      <thead><tr><th>Member</th><th>Role</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for m in members %}
+        <tr>
+          <td>
+            <div class="flex-center gap-10">
+              <div class="avatar avatar-blue">{{ m.student.initials }}</div>
+              <div>
+                <div class="font-bold" style="font-size:14px">{{ m.student.get_full_name|default:m.student.username }}</div>
+                <div class="text-sm text-muted">{{ m.student.email }}</div>
+              </div>
+            </div>
+          </td>
+          <td>
+            {% if m.student == team.leader %}
+              <span class="role-pill role-leader">Leader</span>
+            {% else %}
+              <span class="role-pill role-student">Member</span>
+            {% endif %}
+          </td>
+          <td><span class="badge badge-green">Active</span></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:20px">No members yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {# Recent Tasks #}
+  <div class="card">
+    <div class="card-title">Tasks
+      {% if user.is_student and is_leader %}
+      <a href="{% url 'tasks:create' %}" style="font-size:13px" class="btn btn-primary btn-sm">+ New Task</a>
+      {% endif %}
+    </div>
+    {% for task in tasks|slice:":6" %}
+    <div class="task-item">
+      <div class="task-check {% if task.status == 'completed' %}done{% endif %}"></div>
+      <span class="task-text {% if task.status == 'completed' %}done{% endif %}" style="font-size:14px">
+        {{ task.title }}
+      </span>
+      <span class="badge badge-{% if task.status == 'completed' %}green{% elif task.status == 'overdue' %}red{% elif task.status == 'in_progress' %}blue{% else %}gray{% endif %}">
+        {{ task.get_status_display }}
+      </span>
+    </div>
+    {% empty %}
+    <div class="empty-state" style="padding:24px 0">
+      <i class="fa fa-tasks"></i>
+      <p>No tasks yet.</p>
+    </div>
+    {% endfor %}
+    {% if tasks.count > 6 %}
+    <a href="{% url 'tasks:list' %}" class="btn btn-secondary btn-sm w-full" style="margin-top:12px">View all tasks</a>
+    {% endif %}
+  </div>
+
+</div>
+
+{# Feedback section #}
+<div class="card" style="margin-top:20px">
+  <div class="card-title">Teacher Feedback
+    {% if user.is_teacher %}
+    <a href="{% url 'teams:feedback' team.pk %}" class="btn btn-primary btn-sm">+ Give Feedback</a>
+    {% endif %}
+  </div>
+  {% for fb in feedback %}
+  <div class="feedback-box">
+    <div class="feedback-header">
+      <div class="avatar avatar-green" style="width:34px;height:34px;font-size:13px">{{ fb.teacher.initials }}</div>
+      <div>
+        <div class="feedback-name">{{ fb.teacher.get_full_name }}</div>
+        <div class="feedback-date">{{ fb.created_at|date:"M d, Y" }} · {{ fb.get_feedback_type_display }}</div>
+      </div>
+      {% if fb.rating %}
+      <div class="stars" style="margin-left:auto">
+        {% for i in fb.star_range %}★{% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    <div class="feedback-text">{{ fb.message }}</div>
+  </div>
+  {% empty %}
+  <div class="empty-state" style="padding:24px 0">
+    <i class="fa fa-comment-slash"></i>
+    <p>No feedback yet.</p>
+  </div>
+  {% endfor %}
+</div>
+
+{# Submissions #}
+<div class="card" style="margin-top:20px">
+  <div class="card-title">Submissions
+    {% if user.is_student %}
+    <a href="{% url 'submissions:create' %}" class="btn btn-primary btn-sm">+ Submit File</a>
+    {% endif %}
+  </div>
+  {% if files %}
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>File</th><th>Phase</th><th>Submitted By</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        {% for sub in files %}
+        <tr>
+          <td>
+            <div class="flex-center gap-10">
+              <i class="fa fa-file-{{ sub.file_extension }} text-muted" style="font-size:18px"></i>
+              <div>
+                <div class="font-bold" style="font-size:14px">{{ sub.title }}</div>
+                <div class="text-sm text-muted">{{ sub.filename }} · {{ sub.file_size_mb }} MB</div>
+              </div>
+            </div>
+          </td>
+          <td><span class="badge badge-blue">{{ sub.get_phase_display }}</span></td>
+          <td>{{ sub.submitted_by.get_full_name|default:"—" }}</td>
+          <td>{{ sub.submitted_at|date:"M d, Y" }}</td>
+          <td>
+            <span class="badge badge-{% if sub.status == 'approved' %}green{% elif sub.status == 'rejected' %}red{% elif sub.status == 'reviewed' %}blue{% else %}amber{% endif %}">
+              {{ sub.get_status_display }}
+            </span>
+          </td>
+          <td>
+            <div class="flex gap-8">
+              <a href="{% url 'submissions:download' sub.pk %}" class="btn btn-ghost btn-sm"><i class="fa fa-download"></i></a>
+              {% if user.is_teacher and sub.status == 'pending' %}
+              <a href="{% url 'submissions:review' sub.pk %}" class="btn btn-primary btn-sm">Review</a>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state" style="padding:24px 0">
+    <i class="fa fa-folder-open"></i>
+    <p>No files submitted yet.</p>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block body %}
+<div class="app-shell">
+
+  {# ── Sidebar ── #}
+  <aside class="sidebar" id="sidebar">
+    <a class="sidebar-logo" href="{% url 'dashboard' %}">
+      Project<span style="color:var(--accent)">Flow</span>
+    </a>
+
+    {% if user.is_student %}
+      <div class="sidebar-section-title">Main</div>
+      <ul class="sidebar-nav">
+        <li><a href="{% url 'student_dashboard' %}" class="{% if active_nav == 'dashboard' %}active{% endif %}">
+          <span class="nav-icon"><i class="fa fa-th-large"></i></span>Dashboard</a></li>
+        <li><a href="{% url 'teams:list' %}" class="{% if active_nav == 'teams' %}active{% endif %}">
+          <span class="nav-icon"><i class="fa fa-users"></i></span>My Team</a></li>
+        <li><a href="{% url 'tasks:list' %}" class="{% if active_nav == 'tasks' %}active{% endif %}">
+          <span class="nav-icon"><i class="fa fa-tasks"></i></span>Tasks
+          {% if tasks_pending > 0 %}<span class="sidebar-badge">{{ tasks_pending }}</span>{% endif %}
+        </a></li>
+        <li><a href="{% url 'submissions:list' %}" class="{% if active_nav == 'submissions' %}active{% endif %}">
+          <span class="nav-icon"><i class="fa fa-upload"></i></span>Submissions</a></li>
+        <li><a href="{% url 'notifications:list' %}" class="{% if active_nav == 'notifications' %}active{% endif %}">
+          <span class="nav-icon"><i class="fa fa-bell"></i></span>Notifications
+          {% if unread_count > 0 %}<span class="sidebar-badge">{{ unread_count }}</span>{% endif %}
+        </a></li>
+      </ul>
+
+    {% elif user.is_teacher %}
+      <div class="sidebar-section-title">Monitor</div>
+      <ul class="sidebar-nav">
+        <li><a href="{% url 'teacher_dashboard' %}" class="{% if active_nav == 'dashboard' %}active{% endif %}">
+          <span class="nav-icon"><i class="fa fa-th-large"></i></span>Dashboard</a></li>
+        <li><a href="{% url 'teams:list' %}" class="{% if active_nav == 'teams' %}active{% endif %}">
+          <span class="nav-icon"><i class="fa fa-users"></i></span>All Teams</a></li>
+        <li><a href="{% url 'tasks:list' %}" class="{% if active_nav == 'tasks' %}active{% endif %}">
+          <span class="nav-icon"><i class="fa fa-tasks"></i></span>Tasks</a></li>
+        <li><a href="{% url 'submissions:list' %}" class="{% if active_nav == 'submissions' %}active{% endif %}">
+          <span class="nav-icon"><i class="fa fa-inbox"></i></span>Reviews
+          {% if pending_submissions_count > 0 %}<span class="sidebar-badge">{{ pending_submissions_count }}</span>{% endif %}
+        </a></li>
+        <li><a href="{% url 'notifications:list' %}" class="{% if active_nav == 'notifications' %}active{% endif %}">
+          <span class="nav-icon"><i class="fa fa-bell"></i></span>Notifications
+          {% if unread_count > 0 %}<span class="sidebar-badge">{{ unread_count }}</span>{% endif %}
+        </a></li>
+      </ul>
+    {% endif %}
+
+    <div class="sidebar-section-title">Account</div>
+    <ul class="sidebar-nav">
+      <li><a href="{% url 'profile:detail' %}" class="{% if active_nav == 'profile' %}active{% endif %}">
+        <span class="nav-icon"><i class="fa fa-user"></i></span>Profile</a></li>
+      <li><a href="{% url 'accounts:logout' %}">
+        <span class="nav-icon"><i class="fa fa-sign-out-alt"></i></span>Logout</a></li>
+    </ul>
+
+    <div class="sidebar-user">
+      <div class="avatar avatar-blue">{{ user.initials }}</div>
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name">{{ user.get_full_name|default:user.username }}</div>
+        <div class="sidebar-user-role">{{ user.get_role_display }} · {{ user.get_department_display }}</div>
+      </div>
+    </div>
+  </aside>
+
+  {# ── Main content ── #}
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="icon-btn" id="sidebar-toggle" onclick="toggleSidebar()">
+          <i class="fa fa-bars"></i>
+        </button>
+        <div class="page-title">{% block page_title %}Dashboard{% endblock %}</div>
+      </div>
+      <div class="topbar-right">
+        <form action="" method="get" class="search-box">
+          <i class="fa fa-search"></i>
+          <input name="q" placeholder="Search…" value="{{ request.GET.q }}"
+                 style="border:none;background:transparent;outline:none;font-family:var(--font-body);font-size:14px;color:var(--text);width:160px">
+        </form>
+        <button class="icon-btn" onclick="toggleTheme()" title="Toggle dark mode">
+          <i class="fa fa-moon" id="theme-icon"></i>
+        </button>
+        <a href="{% url 'notifications:list' %}" class="icon-btn" style="position:relative">
+          <i class="fa fa-bell"></i>
+          {% if unread_count > 0 %}
+          <span style="position:absolute;top:6px;right:6px;width:8px;height:8px;
+                       background:var(--danger);border-radius:50%;border:2px solid var(--surface)"></span>
+          {% endif %}
+        </a>
+        <a href="{% url 'profile:detail' %}" class="avatar avatar-blue" style="text-decoration:none;cursor:pointer">
+          {{ user.initials }}
+        </a>
+      </div>
+    </header>
+
+    <div class="content-area">
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+
+</div><!-- app-shell -->
+{% endblock %}

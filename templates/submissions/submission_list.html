@@ -1,0 +1,89 @@
+{% extends 'base_app.html' %}
+{% block title %}Submissions — ProjectFlow{% endblock %}
+{% block page_title %}{% if user.is_student %}Project Submissions{% else %}Review Queue{% endif %}{% endblock %}
+{% block content %}
+
+<div class="flex-between mb-20">
+  <div>
+    {% if pending_count > 0 %}
+    <span class="badge badge-red">{{ pending_count }} pending review{{ pending_count|pluralize }}</span>
+    {% endif %}
+  </div>
+  {% if user.is_student %}
+  <a href="{% url 'submissions:create' %}" class="btn btn-primary">
+    <i class="fa fa-upload"></i> New Submission
+  </a>
+  {% endif %}
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Title</th>
+          {% if user.is_teacher %}<th>Team</th>{% endif %}
+          <th>Phase</th><th>File</th><th>Submitted</th><th>Version</th><th>Status</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for sub in submissions %}
+        <tr>
+          <td>
+            <div class="font-bold" style="font-size:14px">{{ sub.title }}</div>
+            {% if sub.description %}<div class="text-sm text-muted">{{ sub.description|truncatechars:50 }}</div>{% endif %}
+          </td>
+          {% if user.is_teacher %}
+          <td><span class="badge badge-blue">{{ sub.team.name }}</span></td>
+          {% endif %}
+          <td><span class="badge badge-gray">{{ sub.get_phase_display }}</span></td>
+          <td>
+            <div class="flex-center gap-8">
+              <i class="fa fa-file" style="color:var(--text-muted)"></i>
+              <div>
+                <div style="font-size:13px">{{ sub.filename }}</div>
+                <div class="text-sm text-muted">{{ sub.file_size_mb }} MB</div>
+              </div>
+            </div>
+          </td>
+          <td>{{ sub.submitted_at|date:"M d, Y" }}</td>
+          <td><span class="badge badge-gray">v{{ sub.version }}</span></td>
+          <td>
+            <span class="badge badge-{% if sub.status == 'approved' %}green{% elif sub.status == 'rejected' %}red{% elif sub.status == 'reviewed' %}blue{% else %}amber{% endif %}">
+              {{ sub.get_status_display }}
+            </span>
+          </td>
+          <td>
+            <div class="flex gap-8">
+              <a href="{% url 'submissions:download' sub.pk %}" class="btn btn-ghost btn-sm" title="Download">
+                <i class="fa fa-download"></i>
+              </a>
+              {% if user.is_teacher and sub.status == 'pending' %}
+              <a href="{% url 'submissions:review' sub.pk %}" class="btn btn-primary btn-sm">Review</a>
+              {% elif user.is_teacher %}
+              <a href="{% url 'submissions:review' sub.pk %}" class="btn btn-secondary btn-sm">Re-review</a>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="{% if user.is_teacher %}8{% else %}7{% endif %}">
+            <div class="empty-state">
+              <i class="fa fa-folder-open"></i>
+              <h4>No Submissions Yet</h4>
+              {% if user.is_student %}
+              <p>Upload your first project file to get started.</p>
+              <a href="{% url 'submissions:create' %}" class="btn btn-primary btn-sm">Submit Now</a>
+              {% else %}
+              <p>No submissions to review.</p>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

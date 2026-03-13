@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}ProjectFlow — Student Project Management{% endblock %}
+
+{% block body %}
+<div style="min-height:100vh;background:var(--bg)">
+
+  {# Navbar #}
+  <nav class="home-nav">
+    <a class="logo" href="{% url 'home' %}">Project<span class="logo-dot">Flow</span></a>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#about">About</a></li>
+    </ul>
+    <div class="nav-actions">
+      <a href="{% url 'accounts:login' %}" class="btn btn-secondary">Login</a>
+      <a href="{% url 'accounts:register' %}" class="btn btn-primary">
+        <i class="fa fa-user-plus"></i> Get Started
+      </a>
+    </div>
+  </nav>
+
+  {# Hero #}
+  <section class="hero">
+    <div>
+      <div class="hero-badge fade-up"><i class="fa fa-star"></i> Student Project Management System</div>
+      <h1 class="fade-up fade-up-1">Manage Projects.<br><span>Track Progress.</span><br>Collaborate.</h1>
+      <p class="fade-up fade-up-2">A unified platform for student teams to collaborate, submit work, and get feedback — while teachers monitor every step.</p>
+      <div class="hero-actions fade-up fade-up-3">
+        <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg">
+          <i class="fa fa-rocket"></i> Get Started Free
+        </a>
+        <a href="{% url 'accounts:login' %}" class="btn btn-secondary btn-lg">
+          <i class="fa fa-sign-in-alt"></i> Sign In
+        </a>
+      </div>
+    </div>
+    <div class="hero-visual fade-up fade-up-4">
+      <div class="hero-card">
+        <div class="hero-card-title"><i class="fa fa-chart-line" style="color:var(--brand)"></i> Team Alpha — AI Chatbot</div>
+        <div class="hero-stat-row">
+          <div class="hero-stat"><div class="hero-stat-num">6</div><div class="hero-stat-label">Members</div></div>
+          <div class="hero-stat"><div class="hero-stat-num">13</div><div class="hero-stat-label">Tasks Done</div></div>
+          <div class="hero-stat"><div class="hero-stat-num" style="color:var(--accent2)">72%</div><div class="hero-stat-label">Progress</div></div>
+        </div>
+        <div class="hero-progress-label"><span>Overall Progress</span><span style="color:var(--brand);font-weight:700">72%</span></div>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:72%"></div></div>
+        <div class="hero-progress-label"><span>Frontend</span><span>85%</span></div>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:85%"></div></div>
+        <div class="hero-progress-label"><span>Backend</span><span>60%</span></div>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:60%"></div></div>
+      </div>
+    </div>
+  </section>
+
+  {# Features #}
+  <section class="features" id="features">
+    <div class="features-inner">
+      <div class="section-label">Why ProjectFlow?</div>
+      <h2 class="section-title">Everything your team needs</h2>
+      <p class="section-sub">From task management to file submissions — all in one place for academic project workflows.</p>
+      <div class="features-grid">
+        <div class="feature-card"><div class="feature-icon"><i class="fa fa-users"></i></div><h3>Team Collaboration</h3><p>Form teams of 5–6 students, assign a leader, and collaborate on shared projects.</p></div>
+        <div class="feature-card"><div class="feature-icon" style="background:var(--accent2)"><i class="fa fa-tasks"></i></div><h3>Task Management</h3><p>Create, assign, and track tasks with deadlines. Visual status keeps everyone in sync.</p></div>
+        <div class="feature-card"><div class="feature-icon" style="background:var(--accent)"><i class="fa fa-chart-bar"></i></div><h3>Progress Tracking</h3><p>Visual dashboards with charts and progress bars help track milestones.</p></div>
+        <div class="feature-card"><div class="feature-icon" style="background:#8B5CF6"><i class="fa fa-chalkboard-teacher"></i></div><h3>Teacher Monitoring</h3><p>Teachers get a bird's-eye view of all teams, with approval flows and feedback tools.</p></div>
+        <div class="feature-card"><div class="feature-icon" style="background:var(--danger)"><i class="fa fa-bell"></i></div><h3>Smart Notifications</h3><p>Real-time alerts for deadlines, teacher feedback, approvals, and assignments.</p></div>
+        <div class="feature-card"><div class="feature-icon" style="background:#06B6D4"><i class="fa fa-folder-open"></i></div><h3>File Repository</h3><p>Upload and manage project files with version history. Submit PDFs, ZIPs, and more.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="home-footer">
+    © 2025 <span>ProjectFlow</span> — Student Project Management System. Built with Django.
+  </footer>
+</div>
+{% endblock %}

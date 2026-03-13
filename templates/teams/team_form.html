@@ -1,0 +1,27 @@
+{% extends 'base_app.html' %}
+{% block title %}{{ action }} Team — ProjectFlow{% endblock %}
+{% block page_title %}{{ action }} Team{% endblock %}
+{% block content %}
+<div style="max-width:580px">
+  <div class="card">
+    <div class="card-title">{{ action }} a New Team</div>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% for field in form %}
+      <div class="form-group">
+        <label class="form-label">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+        {{ field }}
+        {% if field.help_text %}<div class="form-hint">{{ field.help_text }}</div>{% endif %}
+        {% if field.errors %}{% for e in field.errors %}
+          <div style="color:var(--danger);font-size:12px;margin-top:4px">{{ e }}</div>
+        {% endfor %}{% endif %}
+      </div>
+      {% endfor %}
+      <div class="flex gap-12">
+        <button type="submit" class="btn btn-primary"><i class="fa fa-check"></i> {{ action }} Team</button>
+        <a href="{% url 'teams:list' %}" class="btn btn-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,129 @@
+{% extends 'base_app.html' %}
+{% block title %}Student Dashboard — ProjectFlow{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block content %}
+
+{% if team %}
+{# Announcement / deadline banner #}
+<div class="announce-card fade-up">
+  <h3>🎯 Your Project: {{ team.project_title }}</h3>
+  <p>Team: <strong>{{ team.name }}</strong> &nbsp;·&nbsp;
+     Progress: <strong>{{ progress }}%</strong> &nbsp;·&nbsp;
+     {{ tasks_done }} of {{ tasks_total }} tasks complete.</p>
+</div>
+{% else %}
+<div class="announce-card fade-up" style="background:linear-gradient(135deg,var(--accent),#FCD34D)">
+  <h3>👋 Welcome, {{ user.first_name|default:user.username }}!</h3>
+  <p>You are not in a team yet. <a href="{% url 'teams:list' %}" style="color:white;font-weight:700;text-decoration:underline">Browse teams →</a></p>
+</div>
+{% endif %}
+
+{# Stat cards #}
+<div class="stat-cards fade-up fade-up-1">
+  <div class="stat-card blue">
+    <div class="stat-icon blue"><i class="fa fa-chart-pie"></i></div>
+    <div class="stat-value">{{ progress|default:0 }}%</div>
+    <div class="stat-label">Project Progress</div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-icon green"><i class="fa fa-check-square"></i></div>
+    <div class="stat-value">{{ tasks_done|default:0 }}</div>
+    <div class="stat-label">Tasks Completed</div>
+  </div>
+  <div class="stat-card amber">
+    <div class="stat-icon amber"><i class="fa fa-clock"></i></div>
+    <div class="stat-value">{{ tasks_pending|default:0 }}</div>
+    <div class="stat-label">Pending Tasks</div>
+  </div>
+  <div class="stat-card red">
+    <div class="stat-icon red"><i class="fa fa-exclamation-circle"></i></div>
+    <div class="stat-value">{{ tasks_overdue|default:0 }}</div>
+    <div class="stat-label">Overdue Tasks</div>
+  </div>
+</div>
+
+<div class="grid-2 fade-up fade-up-2">
+  {# My Tasks #}
+  <div class="card">
+    <div class="card-title">My Tasks
+      <a href="{% url 'tasks:list' %}" style="font-size:13px;color:var(--brand);font-weight:500">View all →</a>
+    </div>
+    {% if my_tasks %}
+      {% for task in my_tasks %}
+      <div class="task-item">
+        <div class="task-check {% if task.status == 'completed' %}done{% endif %}"></div>
+        <span class="task-text {% if task.status == 'completed' %}done{% endif %}">{{ task.title }}</span>
+        <span class="badge badge-{% if task.status == 'completed' %}green{% elif task.status == 'overdue' %}red{% elif task.status == 'in_progress' %}blue{% else %}gray{% endif %}">
+          {{ task.get_status_display }}
+        </span>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state" style="padding:30px 0">
+        <i class="fa fa-tasks"></i>
+        <p>No tasks assigned yet.</p>
+        {% if team %}
+        <a href="{% url 'tasks:create' %}" class="btn btn-primary btn-sm">Create Task</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+
+  {# Recent Feedback #}
+  <div class="card">
+    <div class="card-title">Teacher Feedback</div>
+    {% if recent_feedback %}
+      {% for fb in recent_feedback %}
+      <div class="feedback-box">
+        <div class="feedback-header">
+          <div class="avatar avatar-green" style="width:32px;height:32px;font-size:12px">
+            {{ fb.teacher.initials }}
+          </div>
+          <div>
+            <div class="feedback-name">{{ fb.teacher.get_full_name }}</div>
+            <div class="feedback-date">{{ fb.created_at|date:"M d, Y" }}</div>
+          </div>
+          {% if fb.rating %}
+          <div class="stars" style="margin-left:auto">
+            {% for i in fb.star_range %}★{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        <div class="feedback-text">{{ fb.message|truncatewords:30 }}</div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state" style="padding:30px 0">
+        <i class="fa fa-comment-slash"></i>
+        <p>No feedback received yet.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+{# Recent Notifications #}
+<div class="card fade-up fade-up-3">
+  <div class="card-title">Recent Notifications
+    <a href="{% url 'notifications:list' %}" style="font-size:13px;color:var(--brand);font-weight:500">View all →</a>
+  </div>
+  {% if unread_notifications %}
+  <div class="notif-list">
+    {% for notif in unread_notifications %}
+    <div class="notif-item">
+      <div class="notif-dot" style="background:var(--{% if notif.color == 'blue' %}brand{% elif notif.color == 'green' %}accent2{% elif notif.color == 'amber' %}accent{% else %}danger{% endif %})"></div>
+      <div>
+        <div class="notif-text">{{ notif.description }}</div>
+        <div class="notif-time">{{ notif.created_at|timesince }} ago</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state" style="padding:24px 0">
+    <i class="fa fa-bell-slash"></i>
+    <p>You're all caught up!</p>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}

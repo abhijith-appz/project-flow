@@ -1,0 +1,94 @@
+{% extends 'base_app.html' %}
+{% block title %}All Teams — ProjectFlow{% endblock %}
+{% block page_title %}All Teams{% endblock %}
+{% block content %}
+
+<div class="flex-between mb-20">
+  <form class="flex gap-8" method="get" style="flex-wrap:wrap">
+    <select name="dept" class="form-control" style="width:auto;padding:8px 14px" onchange="this.form.submit()">
+      <option value="">All Departments</option>
+      <option value="cs"   {% if dept == 'cs' %}selected{% endif %}>Computer Science</option>
+      <option value="it"   {% if dept == 'it' %}selected{% endif %}>Information Technology</option>
+      <option value="ece"  {% if dept == 'ece' %}selected{% endif %}>ECE</option>
+      <option value="mech" {% if dept == 'mech' %}selected{% endif %}>Mechanical</option>
+    </select>
+    <select name="status" class="form-control" style="width:auto;padding:8px 14px" onchange="this.form.submit()">
+      <option value="">All Status</option>
+      <option value="active"    {% if status == 'active' %}selected{% endif %}>Active</option>
+      <option value="at_risk"   {% if status == 'at_risk' %}selected{% endif %}>At Risk</option>
+      <option value="completed" {% if status == 'completed' %}selected{% endif %}>Completed</option>
+      <option value="forming"   {% if status == 'forming' %}selected{% endif %}>Forming</option>
+    </select>
+    <div class="search-box" style="border:1.5px solid var(--border)">
+      <i class="fa fa-search"></i>
+      <input name="q" placeholder="Search teams…" value="{{ search }}"
+             style="border:none;background:transparent;outline:none;font-family:var(--font-body);font-size:14px;color:var(--text)">
+    </div>
+    <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+  </form>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Team</th><th>Project Topic</th><th>Members</th>
+          <th>Progress</th><th>Submissions</th><th>Status</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for team in teams %}
+        <tr>
+          <td>
+            <div class="font-bold">{{ team.name }}</div>
+            <div class="text-sm text-muted">Leader: {{ team.leader.get_full_name|default:"—" }}</div>
+          </td>
+          <td>{{ team.project_title }}</td>
+          <td>{{ team.member_count }}/{{ team.max_members }}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress-track" style="width:80px;flex-shrink:0">
+                <div class="progress-fill {% if team.progress_percent >= 75 %}green{% elif team.progress_percent < 40 %}amber{% endif %}"
+                     style="width:{{ team.progress_percent }}%"></div>
+              </div>
+              <span class="text-sm font-bold">{{ team.progress_percent }}%</span>
+            </div>
+          </td>
+          <td>
+            {% with pending=team.submissions.filter %}
+            <span class="badge badge-{% if team.submissions.count == 0 %}gray{% else %}blue{% endif %}">
+              {{ team.submissions.count }} file{{ team.submissions.count|pluralize }}
+            </span>
+            {% endwith %}
+          </td>
+          <td>
+            <span class="badge badge-{% if team.status == 'active' %}green{% elif team.status == 'at_risk' %}red{% elif team.status == 'completed' %}blue{% else %}gray{% endif %}">
+              {{ team.get_status_display }}
+            </span>
+          </td>
+          <td>
+            <div class="flex gap-8">
+              <a href="{% url 'teams:detail' team.pk %}" class="btn btn-primary btn-sm">View</a>
+              <a href="{% url 'teams:feedback' team.pk %}" class="btn btn-secondary btn-sm" title="Give Feedback">
+                <i class="fa fa-comment"></i>
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7">
+            <div class="empty-state">
+              <i class="fa fa-users-slash"></i>
+              <h4>No Teams Found</h4>
+              <p>No teams match your current filters.</p>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

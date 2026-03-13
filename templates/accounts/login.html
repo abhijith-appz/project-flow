@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}Sign In — ProjectFlow{% endblock %}
+{% block body %}
+<div style="display:flex;min-height:100vh">
+
+  <div class="auth-left">
+    <div class="auth-left-content">
+      <a class="logo" href="{% url 'home' %}" style="color:white;margin-bottom:48px;display:flex;text-decoration:none;font-family:var(--font-display);font-size:22px;font-weight:800">
+        Project<span style="color:var(--accent)">Flow</span>
+      </a>
+      <h2>Welcome back to your workspace</h2>
+      <p>Sign in to continue collaborating with your team and stay on top of your project milestones.</p>
+      <ul class="auth-bullets">
+        <li><i class="fa fa-check-circle"></i> Role-based dashboards for students &amp; teachers</li>
+        <li><i class="fa fa-check-circle"></i> Real-time progress tracking &amp; notifications</li>
+        <li><i class="fa fa-check-circle"></i> Secure file submissions &amp; version history</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="auth-right">
+    <a class="logo" href="{% url 'home' %}" style="margin-bottom:40px;display:flex;text-decoration:none">
+      Project<span class="logo-dot">Flow</span>
+    </a>
+    <div class="auth-title">Sign in</div>
+    <div class="auth-sub">Don't have an account?
+      <a href="{% url 'accounts:register' %}" style="color:var(--brand);font-weight:600">Create one →</a>
+    </div>
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% for field in form %}
+        {% if field.name != 'role' %}
+        <div class="form-group">
+          <label class="form-label">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}
+            {% for error in field.errors %}
+            <div style="color:var(--danger);font-size:12px;margin-top:4px">{{ error }}</div>
+            {% endfor %}
+          {% endif %}
+        </div>
+        {% endif %}
+      {% endfor %}
+
+      <div class="form-footer mb-20">
+        <div class="checkbox-group">
+          <input type="checkbox" id="remember" name="remember">
+          <label for="remember">Remember me</label>
+        </div>
+        <a href="#" style="font-size:13px;color:var(--brand);font-weight:600">Forgot password?</a>
+      </div>
+
+      {% if form.non_field_errors %}
+      <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:12px 16px;color:var(--danger);font-size:14px;margin-bottom:16px">
+        {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+      </div>
+      {% endif %}
+
+      <button type="submit" class="btn btn-primary w-full btn-lg">
+        <i class="fa fa-sign-in-alt"></i> Sign In
+      </button>
+    </form>
+    <div style="margin-top:20px;text-align:center;font-size:13px;color:var(--text-muted)">
+      Are you a teacher?
+      <a href="{% url 'accounts:register_teacher' %}" style="color:var(--brand);font-weight:600">Register here →</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

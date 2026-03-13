@@ -1,0 +1,42 @@
+{% extends 'base_app.html' %}
+{% block title %}Notifications — ProjectFlow{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+{% block content %}
+
+<div class="flex-between mb-20">
+  <span class="text-muted text-sm">{{ notifications.count }} notification{{ notifications.count|pluralize }}</span>
+  {% if notifications %}
+  <form method="post" action="{% url 'notifications:mark_all_read' %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-secondary btn-sm">
+      <i class="fa fa-check-double"></i> Mark all read
+    </button>
+  </form>
+  {% endif %}
+</div>
+
+<div class="card">
+  {% for notif in notifications %}
+  <div class="notif-item" style="{% if not notif.is_read %}background:rgba(37,99,235,0.03){% endif %}">
+    <div style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+      background:rgba({% if notif.color == 'blue' %}37,99,235{% elif notif.color == 'green' %}16,185,129{% elif notif.color == 'amber' %}245,158,11{% else %}239,68,68{% endif %},0.1);
+      color:var(--{% if notif.color == 'blue' %}brand{% elif notif.color == 'green' %}accent2{% elif notif.color == 'amber' %}accent{% else %}danger{% endif %})">
+      <i class="fa {{ notif.icon }}"></i>
+    </div>
+    <div style="flex:1">
+      <div class="notif-text">{{ notif.description }}</div>
+      <div class="notif-time">{{ notif.created_at|timesince }} ago · {{ notif.created_at|date:"M d, Y H:i" }}</div>
+    </div>
+    {% if not notif.is_read %}
+    <div style="width:8px;height:8px;border-radius:50%;background:var(--brand);flex-shrink:0"></div>
+    {% endif %}
+  </div>
+  {% empty %}
+  <div class="empty-state" style="padding:60px 0">
+    <i class="fa fa-bell-slash"></i>
+    <h4>All Caught Up!</h4>
+    <p>You have no notifications right now.</p>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

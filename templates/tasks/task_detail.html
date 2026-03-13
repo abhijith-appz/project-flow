@@ -1,0 +1,120 @@
+{% extends 'base_app.html' %}
+{% block title %}{{ task.title }} — ProjectFlow{% endblock %}
+{% block page_title %}Task Detail{% endblock %}
+{% block content %}
+
+<div class="grid-2">
+  <div>
+    <div class="card mb-20">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;gap:12px">
+        <div>
+          <h2 style="font-family:var(--font-display);font-size:22px;font-weight:800;margin-bottom:8px">{{ task.title }}</h2>
+          <div class="flex gap-8" style="flex-wrap:wrap">
+            <span class="badge badge-{% if task.priority == 'high' %}red{% elif task.priority == 'medium' %}amber{% else %}blue{% endif %}">
+              {{ task.get_priority_display }} Priority
+            </span>
+            <span class="badge badge-{% if task.status == 'completed' %}green{% elif task.status == 'overdue' %}red{% elif task.status == 'in_progress' %}blue{% else %}gray{% endif %}">
+              {{ task.get_status_display }}
+            </span>
+          </div>
+        </div>
+        {% if can_edit and task.status != 'completed' %}
+        <div class="flex gap-8">
+          <a href="{% url 'tasks:update' task.pk %}" class="btn btn-secondary btn-sm"><i class="fa fa-edit"></i> Edit</a>
+          <form method="post" action="{% url 'tasks:complete' task.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success btn-sm"><i class="fa fa-check"></i> Mark Complete</button>
+          </form>
+        </div>
+        {% endif %}
+      </div>
+
+      {% if task.description %}
+      <p style="font-size:15px;color:var(--text-muted);line-height:1.7;margin-bottom:16px">{{ task.description }}</p>
+      {% endif %}
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:14px">
+        <div style="background:var(--bg);border-radius:10px;padding:14px">
+          <div class="text-muted text-sm mb-4">Assigned To</div>
+          {% if task.assigned_to %}
+          <div class="flex-center gap-8">
+            <div class="avatar avatar-blue" style="width:28px;height:28px;font-size:12px">{{ task.assigned_to.initials }}</div>
+            {{ task.assigned_to.get_full_name|default:task.assigned_to.username }}
+          </div>
+          {% else %}<span class="text-muted">Unassigned</span>{% endif %}
+        </div>
+        <div style="background:var(--bg);border-radius:10px;padding:14px">
+          <div class="text-muted text-sm mb-4">Deadline</div>
+          <div {% if task.is_overdue %}style="color:var(--danger);font-weight:600"{% endif %}>
+            {{ task.deadline|date:"M d, Y"|default:"No deadline" }}
+            {% if task.is_overdue %} ⚠️{% endif %}
+          </div>
+        </div>
+        <div style="background:var(--bg);border-radius:10px;padding:14px">
+          <div class="text-muted text-sm mb-4">Team</div>
+          <a href="{% url 'teams:detail' task.team.pk %}" style="font-weight:600">{{ task.team.name }}</a>
+        </div>
+        <div style="background:var(--bg);border-radius:10px;padding:14px">
+          <div class="text-muted text-sm mb-4">Created By</div>
+          {{ task.created_by.get_full_name|default:task.created_by.username|default:"—" }}
+        </div>
+      </div>
+
+      {% if task.completed_at %}
+      <div style="margin-top:14px;padding:12px 16px;background:rgba(16,185,129,0.08);border-radius:10px;font-size:14px;color:var(--accent2)">
+        <i class="fa fa-check-circle"></i> Completed on {{ task.completed_at|date:"M d, Y \a\t H:i" }}
+      </div>
+      {% endif %}
+    </div>
+
+    {# Delete (leader only) #}
+    {% if user == task.team.leader %}
+    <div class="card" style="border-color:rgba(239,68,68,0.2)">
+      <div class="card-title" style="color:var(--danger)">Danger Zone</div>
+      <p style="font-size:14px;color:var(--text-muted);margin-bottom:14px">Permanently delete this task.</p>
+      <form method="post" action="{% url 'tasks:delete' task.pk %}"
+            onsubmit="return confirm('Delete task permanently?')">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i> Delete Task</button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+
+  {# Comments #}
+  <div class="card">
+    <div class="card-title">Comments ({{ comments.count }})</div>
+    <div style="max-height:400px;overflow-y:auto;margin-bottom:16px">
+      {% for comment in comments %}
+      <div style="display:flex;gap:10px;margin-bottom:14px">
+        <div class="avatar avatar-blue" style="width:32px;height:32px;font-size:12px;flex-shrink:0">
+          {{ comment.author.initials }}
+        </div>
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <span style="font-weight:600;font-size:14px">{{ comment.author.get_full_name|default:comment.author.username }}</span>
+            <span style="font-size:12px;color:var(--text-muted)">{{ comment.created_at|timesince }} ago</span>
+          </div>
+          <div style="font-size:14px;color:var(--text-muted);line-height:1.5;background:var(--bg);padding:10px 14px;border-radius:10px">
+            {{ comment.content }}
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="empty-state" style="padding:20px 0">
+        <i class="fa fa-comment-slash"></i>
+        <p>No comments yet. Be the first!</p>
+      </div>
+      {% endfor %}
+    </div>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {{ comment_form.content }}
+      <button type="submit" class="btn btn-primary btn-sm" style="margin-top:10px;width:100%">
+        <i class="fa fa-paper-plane"></i> Add Comment
+      </button>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends 'base_app.html' %}
+{% block title %}Teacher Dashboard — ProjectFlow{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block content %}
+
+<div class="stat-cards fade-up">
+  <div class="stat-card blue">
+    <div class="stat-icon blue"><i class="fa fa-layer-group"></i></div>
+    <div class="stat-value">{{ teams_count }}</div>
+    <div class="stat-label">My Teams</div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-icon green"><i class="fa fa-user-graduate"></i></div>
+    <div class="stat-value">{{ students_count }}</div>
+    <div class="stat-label">Total Students</div>
+  </div>
+  <div class="stat-card amber">
+    <div class="stat-icon amber"><i class="fa fa-folder-open"></i></div>
+    <div class="stat-value">{{ submissions_count }}</div>
+    <div class="stat-label">Files Submitted</div>
+  </div>
+  <div class="stat-card red">
+    <div class="stat-icon red"><i class="fa fa-clock"></i></div>
+    <div class="stat-value">{{ pending_submissions_count }}</div>
+    <div class="stat-label">Pending Reviews</div>
+  </div>
+</div>
+
+<div class="grid-2 fade-up fade-up-1" style="margin-top:20px">
+
+  {# Teams progress #}
+  <div class="card">
+    <div class="card-title">Teams Progress
+      <a href="{% url 'teams:list' %}" style="font-size:13px;color:var(--brand);font-weight:500">View all →</a>
+    </div>
+    {% for team in teams %}
+    <div class="proj-progress">
+      <div class="proj-info">
+        <span class="proj-name">{{ team.name }} — {{ team.project_title|truncatechars:30 }}</span>
+        <span class="proj-pct">{{ team.progress_percent }}%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill {% if team.progress_percent >= 75 %}green{% elif team.progress_percent < 40 %}amber{% endif %}"
+             style="width:{{ team.progress_percent }}%"></div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="empty-state" style="padding:30px 0">
+      <i class="fa fa-users-slash"></i>
+      <p>No teams assigned yet. Ask your admin to assign teams to you.</p>
+    </div>
+    {% endfor %}
+  </div>
+
+  {# Pending review queue #}
+  <div class="card">
+    <div class="card-title">Pending Review Queue
+      {% if pending_submissions_count > 0 %}
+      <span class="badge badge-red">{{ pending_submissions_count }}</span>
+      {% endif %}
+    </div>
+    {% for sub in pending_submissions %}
+    <div class="activity-item">
+      <div class="activity-icon" style="border-radius:50%;background:rgba(245,158,11,0.15);color:var(--accent)">
+        <i class="fa fa-file"></i>
+      </div>
+      <div style="flex:1">
+        <div class="font-bold text-sm">{{ sub.team.name }} — {{ sub.get_phase_display }}</div>
+        <div class="text-sm text-muted">{{ sub.file_size_mb }} MB · {{ sub.submitted_at|date:"M d, Y" }}</div>
+      </div>
+      <div class="flex gap-8">
+        <a href="{% url 'submissions:review' sub.pk %}" class="btn btn-primary btn-sm">Review</a>
+      </div>
+    </div>
+    {% empty %}
+    <div class="empty-state" style="padding:30px 0">
+      <i class="fa fa-inbox"></i>
+      <p>No pending reviews. All caught up!</p>
+    </div>
+    {% endfor %}
+    {% if pending_submissions_count > 5 %}
+    <div style="text-align:center;margin-top:12px">
+      <a href="{% url 'submissions:list' %}" class="btn btn-secondary btn-sm">View all {{ pending_submissions_count }} pending</a>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+
+{# Notifications #}
+<div class="card fade-up fade-up-2" style="margin-top:20px">
+  <div class="card-title">Recent Notifications
+    <a href="{% url 'notifications:list' %}" style="font-size:13px;color:var(--brand);font-weight:500">View all →</a>
+  </div>
+  {% if unread_notifications %}
+  <div class="notif-list">
+    {% for notif in unread_notifications %}
+    <div class="notif-item">
+      <div class="notif-dot" style="background:var(--{% if notif.color == 'blue' %}brand{% elif notif.color == 'green' %}accent2{% elif notif.color == 'amber' %}accent{% else %}danger{% endif %})"></div>
+      <div>
+        <div class="notif-text">{{ notif.description }}</div>
+        <div class="notif-time">{{ notif.created_at|timesince }} ago</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state" style="padding:24px 0"><i class="fa fa-bell-slash"></i><p>All caught up!</p></div>
+  {% endif %}
+</div>
+
+{% endblock %}

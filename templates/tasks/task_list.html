@@ -1,0 +1,123 @@
+{% extends 'base_app.html' %}
+{% block title %}Tasks — ProjectFlow{% endblock %}
+{% block page_title %}Task Management{% endblock %}
+{% block content %}
+
+{# Stats row #}
+<div class="stat-cards" style="grid-template-columns:repeat(5,1fr);margin-bottom:24px">
+  <div class="stat-card blue"><div class="stat-icon blue"><i class="fa fa-list"></i></div><div class="stat-value">{{ total }}</div><div class="stat-label">Total</div></div>
+  <div class="stat-card green"><div class="stat-icon green"><i class="fa fa-check"></i></div><div class="stat-value">{{ completed }}</div><div class="stat-label">Completed</div></div>
+  <div class="stat-card blue" style="--accent-color:var(--brand)"><div class="stat-icon blue"><i class="fa fa-spinner"></i></div><div class="stat-value">{{ in_progress }}</div><div class="stat-label">In Progress</div></div>
+  <div class="stat-card amber"><div class="stat-icon amber"><i class="fa fa-clock"></i></div><div class="stat-value">{{ pending }}</div><div class="stat-label">Pending</div></div>
+  <div class="stat-card red"><div class="stat-icon red"><i class="fa fa-exclamation"></i></div><div class="stat-value">{{ overdue }}</div><div class="stat-label">Overdue</div></div>
+</div>
+
+<div class="flex-between mb-20" style="flex-wrap:wrap;gap:12px">
+  {# Status filter tabs #}
+  <div class="tabs" style="margin-bottom:0">
+    <a class="tab {% if not status_filter %}active{% endif %}" href="{% url 'tasks:list' %}">All</a>
+    <a class="tab {% if status_filter == 'pending' %}active{% endif %}"     href="?status=pending">Pending</a>
+    <a class="tab {% if status_filter == 'in_progress' %}active{% endif %}" href="?status=in_progress">In Progress</a>
+    <a class="tab {% if status_filter == 'completed' %}active{% endif %}"   href="?status=completed">Completed</a>
+    <a class="tab {% if status_filter == 'overdue' %}active{% endif %}"     href="?status=overdue">Overdue</a>
+  </div>
+  {% if user.is_student %}
+  <a href="{% url 'tasks:create' %}" class="btn btn-primary btn-sm">
+    <i class="fa fa-plus"></i> New Task
+  </a>
+  {% endif %}
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Task</th>
+          {% if user.is_teacher %}<th>Team</th>{% endif %}
+          <th>Assigned To</th><th>Deadline</th><th>Priority</th><th>Status</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for task in tasks %}
+        <tr {% if task.status == 'overdue' %}style="background:rgba(239,68,68,0.03)"{% endif %}>
+          <td>
+            <div class="font-bold" style="font-size:14px">{{ task.title }}</div>
+            {% if task.description %}
+            <div class="text-sm text-muted">{{ task.description|truncatechars:60 }}</div>
+            {% endif %}
+          </td>
+          {% if user.is_teacher %}
+          <td><span class="badge badge-blue">{{ task.team.name }}</span></td>
+          {% endif %}
+          <td>
+            {% if task.assigned_to %}
+            <div class="flex-center gap-8">
+              <div class="mini-avatar avatar-blue">{{ task.assigned_to.initials }}</div>
+              {{ task.assigned_to.get_full_name|default:task.assigned_to.username }}
+            </div>
+            {% else %}
+            <span class="text-muted">Unassigned</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if task.deadline %}
+              {% if task.is_overdue %}
+                <span style="color:var(--danger);font-weight:600">{{ task.deadline|date:"M d" }} ⚠️</span>
+              {% else %}
+                {{ task.deadline|date:"M d, Y" }}
+              {% endif %}
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+          <td>
+            <span class="badge badge-{% if task.priority == 'high' %}red{% elif task.priority == 'medium' %}amber{% else %}blue{% endif %}">
+              {{ task.get_priority_display }}
+            </span>
+          </td>
+          <td>
+            <span class="badge badge-{% if task.status == 'completed' %}green{% elif task.status == 'overdue' %}red{% elif task.status == 'in_progress' %}blue{% else %}gray{% endif %}">
+              {{ task.get_status_display }}
+            </span>
+          </td>
+          <td>
+            <div class="flex gap-8">
+              <a href="{% url 'tasks:detail' task.pk %}" class="btn btn-ghost btn-sm" title="View">
+                <i class="fa fa-eye"></i>
+              </a>
+              {% if task.status != 'completed' and user.is_student %}
+              <form method="post" action="{% url 'tasks:complete' task.pk %}" style="display:inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success btn-sm" title="Mark Complete">
+                  <i class="fa fa-check"></i>
+                </button>
+              </form>
+              {% endif %}
+              {% if user.is_student %}
+              <a href="{% url 'tasks:update' task.pk %}" class="btn btn-ghost btn-sm" title="Edit">
+                <i class="fa fa-edit"></i>
+              </a>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="{% if user.is_teacher %}7{% else %}6{% endif %}">
+            <div class="empty-state">
+              <i class="fa fa-tasks"></i>
+              <h4>No Tasks Found</h4>
+              <p>{% if status_filter %}No {{ status_filter }} tasks.{% else %}Create your first task to get started.{% endif %}</p>
+              {% if user.is_student %}
+              <a href="{% url 'tasks:create' %}" class="btn btn-primary btn-sm">Create Task</a>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Create Account — ProjectFlow{% endblock %}
+{% block body %}
+<div style="display:flex;min-height:100vh">
+
+  <div class="auth-left">
+    <div class="auth-left-content">
+      <a class="logo" href="{% url 'home' %}" style="color:white;margin-bottom:48px;display:flex;text-decoration:none;font-family:var(--font-display);font-size:22px;font-weight:800">
+        Project<span style="color:var(--accent)">Flow</span>
+      </a>
+      <h2>Start your project journey today</h2>
+      <p>Register to join a team, collaborate with peers, and get your final year project across the finish line.</p>
+      <ul class="auth-bullets">
+        <li><i class="fa fa-check-circle"></i> Create or join a team of 5–6 students</li>
+        <li><i class="fa fa-check-circle"></i> Submit project files and get instant feedback</li>
+        <li><i class="fa fa-check-circle"></i> Track your team's progress with visual dashboards</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="auth-right" style="overflow-y:auto">
+    <a class="logo" href="{% url 'home' %}" style="margin-bottom:28px;display:flex;text-decoration:none">
+      Project<span class="logo-dot">Flow</span>
+    </a>
+    <div class="auth-title">{% if role == 'teacher' %}Teacher{% else %}Student{% endif %} Registration</div>
+    <div class="auth-sub">Already registered?
+      <a href="{% url 'accounts:login' %}" style="color:var(--brand);font-weight:600">Sign in →</a>
+    </div>
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% for field in form %}
+      <div class="form-group">
+        <label class="form-label">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+        {{ field }}
+        {% if field.errors %}
+          {% for error in field.errors %}
+          <div style="color:var(--danger);font-size:12px;margin-top:4px">{{ error }}</div>
+          {% endfor %}
+        {% endif %}
+      </div>
+      {% endfor %}
+
+      <button type="submit" class="btn btn-primary w-full btn-lg">
+        <i class="fa fa-user-plus"></i> Create Account
+      </button>
+    </form>
+
+    {% if role != 'teacher' %}
+    <div style="margin-top:16px;text-align:center;font-size:13px;color:var(--text-muted)">
+      Are you a teacher?
+      <a href="{% url 'accounts:register_teacher' %}" style="color:var(--brand);font-weight:600">Teacher registration →</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

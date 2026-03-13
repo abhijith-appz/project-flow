@@ -1,0 +1,55 @@
+{% extends 'base_app.html' %}
+{% block title %}My Profile — ProjectFlow{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+{% block content %}
+
+<div class="profile-header">
+  <div class="profile-avatar-lg">{{ user.initials }}</div>
+  <div>
+    <div class="profile-name">{{ user.get_full_name|default:user.username }}</div>
+    <div class="profile-meta">
+      {% if user.student_id %}<span><i class="fa fa-id-badge"></i> {{ user.student_id }}</span>{% endif %}
+      <span><i class="fa fa-building"></i> {{ user.get_department_display }}</span>
+      <span><i class="fa fa-envelope"></i> {{ user.email }}</span>
+      {% if user.is_student and user.current_team %}
+      <span><i class="fa fa-users"></i> {{ user.current_team.name }}</span>
+      {% endif %}
+      <span><i class="fa fa-user-tag"></i> {{ user.get_role_display }}</span>
+    </div>
+  </div>
+  <div style="margin-left:auto">
+    <a href="{% url 'profile:edit' %}" class="btn btn-secondary" style="color:white;border-color:rgba(255,255,255,0.4);background:rgba(255,255,255,0.1)">
+      <i class="fa fa-edit"></i> Edit Profile
+    </a>
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card-title">Account Details</div>
+    <table style="font-size:14px;width:100%">
+      <tr><td style="padding:8px 0;color:var(--text-muted);width:140px">Username</td><td>{{ user.username }}</td></tr>
+      <tr><td style="padding:8px 0;color:var(--text-muted)">Email</td><td>{{ user.email }}</td></tr>
+      <tr><td style="padding:8px 0;color:var(--text-muted)">Department</td><td>{{ user.get_department_display }}</td></tr>
+      <tr><td style="padding:8px 0;color:var(--text-muted)">Role</td><td>{{ user.get_role_display }}</td></tr>
+      {% if user.phone %}<tr><td style="padding:8px 0;color:var(--text-muted)">Phone</td><td>{{ user.phone }}</td></tr>{% endif %}
+      {% if user.github_url %}<tr><td style="padding:8px 0;color:var(--text-muted)">GitHub</td><td><a href="{{ user.github_url }}" target="_blank">{{ user.github_url }}</a></td></tr>{% endif %}
+      <tr><td style="padding:8px 0;color:var(--text-muted)">Joined</td><td>{{ user.date_joined|date:"F d, Y" }}</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <div class="card-title">Quick Actions</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <a href="{% url 'profile:edit' %}" class="btn btn-secondary w-full"><i class="fa fa-edit"></i> Edit Profile</a>
+      <a href="{% url 'profile:password' %}" class="btn btn-secondary w-full"><i class="fa fa-lock"></i> Change Password</a>
+      {% if user.is_student %}
+      <a href="{% url 'teams:list' %}" class="btn btn-secondary w-full"><i class="fa fa-users"></i> My Team</a>
+      <a href="{% url 'tasks:list' %}" class="btn btn-secondary w-full"><i class="fa fa-tasks"></i> My Tasks</a>
+      {% else %}
+      <a href="{% url 'teams:list' %}" class="btn btn-secondary w-full"><i class="fa fa-users"></i> All Teams</a>
+      <a href="{% url 'submissions:list' %}" class="btn btn-secondary w-full"><i class="fa fa-inbox"></i> Review Submissions</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

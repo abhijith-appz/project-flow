@@ -1,0 +1,189 @@
+{% extends 'base_app.html' %}
+{% block title %}Teams — ProjectFlow{% endblock %}
+{% block page_title %}{% if user.is_student %}My Team{% else %}All Teams{% endif %}{% endblock %}
+{% block content %}
+
+{% if user.is_student %}
+{# ── STUDENT VIEW ── #}
+
+{% if my_team %}
+<div class="card mb-20" style="border:2px solid var(--brand)">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+    <div style="display:flex;align-items:center;gap:14px">
+      <div class="team-icon" style="background:rgba(37,99,235,0.1);color:var(--brand);width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px">🤖</div>
+      <div>
+        <div class="team-name">{{ my_team.name }}
+          <span class="role-pill role-student" style="font-size:11px">Your Team</span>
+        </div>
+        <div class="team-topic">{{ my_team.project_title }}</div>
+      </div>
+    </div>
+    <div class="flex gap-8">
+      <span class="badge badge-{% if my_team.status == 'active' %}green{% elif my_team.status == 'at_risk' %}red{% else %}gray{% endif %}">
+        {{ my_team.get_status_display }}
+      </span>
+      <form method="post" action="{% url 'teams:leave' my_team.pk %}" style="display:inline"
+            onsubmit="return confirm('Leave team {{ my_team.name }}?')">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-secondary btn-sm"><i class="fa fa-sign-out-alt"></i> Leave Team</button>
+      </form>
+    </div>
+  </div>
+  <div class="progress-track mb-8" style="height:10px">
+    <div class="progress-fill" style="width:{{ my_team.progress_percent }}%"></div>
+  </div>
+  <div class="text-muted text-sm mb-20">Project Progress: {{ my_team.progress_percent }}%</div>
+  <table>
+    <thead><tr><th>Member</th><th>Role</th><th>Tasks Completed</th></tr></thead>
+    <tbody>
+      {% for m in my_team.active_members %}
+      <tr>
+        <td><div class="flex-center gap-12">
+          <div class="avatar avatar-blue">{{ m.student.initials }}</div>
+          {{ m.student.get_full_name|default:m.student.username }}
+        </div></td>
+        <td>
+          {% if m.student == my_team.leader %}
+            <span class="role-pill role-leader">Team Leader</span>
+          {% else %}
+            <span class="role-pill role-student">Member</span>
+          {% endif %}
+        </td>
+        <td>{{ m.student.assigned_tasks.filter.count|default:"—" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% if my_team.teacher %}
+  <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);font-size:14px">
+    <span class="text-muted">Supervised by:</span>
+    <strong>{{ my_team.teacher.get_full_name }}</strong>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="flex-between mb-20">
+  <h3 style="font-family:var(--font-display);font-weight:700">
+    {% if my_team %}Other Available Teams{% else %}Available Teams{% endif %}
+  </h3>
+  <a href="{% url 'teams:create' %}" class="btn btn-primary btn-sm">
+    <i class="fa fa-plus"></i> Create Team
+  </a>
+</div>
+
+<div class="team-grid">
+  {% for team in other_teams %}
+  <div class="team-card">
+    <div class="team-card-accent" style="background:linear-gradient(90deg,var(--brand),#60A5FA)"></div>
+    <div class="team-card-header">
+      <div class="team-icon" style="background:rgba(37,99,235,0.1)">🗂️</div>
+      <span class="badge badge-{% if team.is_full %}red{% elif team.member_count >= team.max_members - 1 %}amber{% else %}green{% endif %}">
+        {% if team.is_full %}Full{% elif team.member_count >= team.max_members - 1 %}Almost Full{% else %}Open{% endif %}
+      </span>
+    </div>
+    <div class="team-name">{{ team.name }}</div>
+    <div class="team-topic">{{ team.project_title }}</div>
+    <div class="team-members-row">
+      {% for m in team.active_members %}
+      <div class="mini-avatar avatar-blue">{{ m.student.initials }}</div>
+      {% endfor %}
+      <div class="team-member-count">{{ team.member_count }} / {{ team.max_members }} members</div>
+    </div>
+    {% if not my_team and not team.is_full %}
+    <form method="post" action="{% url 'teams:join' team.pk %}">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-secondary btn-sm w-full">Join Team</button>
+    </form>
+    {% elif team.is_full %}
+    <button class="btn btn-secondary btn-sm w-full" disabled>Team Full</button>
+    {% else %}
+    <button class="btn btn-secondary btn-sm w-full" disabled>Leave your team first</button>
+    {% endif %}
+  </div>
+  {% empty %}
+  <div class="empty-state" style="grid-column:span 3">
+    <i class="fa fa-users-slash"></i>
+    <h4>No Teams Available</h4>
+    <p>Be the first to create a team!</p>
+    <a href="{% url 'teams:create' %}" class="btn btn-primary">Create a Team</a>
+  </div>
+  {% endfor %}
+</div>
+
+{% else %}
+{# ── TEACHER VIEW ── #}
+
+<div class="flex-between mb-20">
+  <form class="flex gap-8" method="get">
+    <select name="dept" class="form-control" style="width:auto;padding:8px 14px" onchange="this.form.submit()">
+      <option value="">All Departments</option>
+      <option value="cs" {% if dept == 'cs' %}selected{% endif %}>Computer Science</option>
+      <option value="it" {% if dept == 'it' %}selected{% endif %}>Information Technology</option>
+    </select>
+    <select name="status" class="form-control" style="width:auto;padding:8px 14px" onchange="this.form.submit()">
+      <option value="">All Status</option>
+      <option value="active"   {% if status == 'active' %}selected{% endif %}>Active</option>
+      <option value="at_risk"  {% if status == 'at_risk' %}selected{% endif %}>At Risk</option>
+      <option value="completed"{% if status == 'completed' %}selected{% endif %}>Completed</option>
+    </select>
+    <div class="search-box" style="border:1.5px solid var(--border)">
+      <i class="fa fa-search"></i>
+      <input name="q" placeholder="Search teams…" value="{{ search }}"
+             style="border:none;background:transparent;outline:none;font-family:var(--font-body);font-size:14px;color:var(--text)">
+    </div>
+    <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+  </form>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Team</th><th>Project Topic</th><th>Members</th>
+          <th>Progress</th><th>Status</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for team in teams %}
+        <tr>
+          <td>
+            <div class="font-bold">{{ team.name }}</div>
+            <div class="text-sm text-muted">Leader: {{ team.leader.get_full_name|default:"—" }}</div>
+          </td>
+          <td>{{ team.project_title }}</td>
+          <td>{{ team.member_count }}/{{ team.max_members }}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress-track" style="width:80px;flex-shrink:0">
+                <div class="progress-fill {% if team.progress_percent >= 75 %}green{% elif team.progress_percent < 40 %}amber{% endif %}"
+                     style="width:{{ team.progress_percent }}%"></div>
+              </div>
+              <span class="text-sm font-bold">{{ team.progress_percent }}%</span>
+            </div>
+          </td>
+          <td>
+            <span class="badge badge-{% if team.status == 'active' %}green{% elif team.status == 'at_risk' %}red{% elif team.status == 'completed' %}blue{% else %}gray{% endif %}">
+              {{ team.get_status_display }}
+            </span>
+          </td>
+          <td>
+            <div class="flex gap-8">
+              <a href="{% url 'teams:detail' team.pk %}" class="btn btn-primary btn-sm">View</a>
+              <a href="{% url 'teams:feedback' team.pk %}" class="btn btn-secondary btn-sm">
+                <i class="fa fa-comment"></i>
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6"><div class="empty-state"><i class="fa fa-users-slash"></i><p>No teams found.</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}
